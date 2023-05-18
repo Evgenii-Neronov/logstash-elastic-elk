@@ -1,31 +1,56 @@
 ﻿version: '3'
 services:
   elasticsearch:
-    image: docker.elastic.co/elasticsearch/elasticsearch:7.10.2
-    container_name: elasticsearch
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.7.1
     environment:
       - discovery.type=single-node
-    ports:
-      - "9200:9200"
+      - bootstrap.memory_lock=true
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+      - xpack.security.enabled=false  
+      - xpack.license.self_generated.type=basic
+      - xpack.security.transport.ssl.enabled=false
+      - xpack.security.http.ssl.enabled=false
+      - ELASTIC_PASSWORD=testpass
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
     volumes:
-      - esdata1:/usr/share/elasticsearch/data
-  logstash:
-    image: docker.elastic.co/logstash/logstash:7.10.2
-    container_name: logstash
+      - esdata:/usr/share/elasticsearch/data
     ports:
-      - "5000:5000"
+      - 9200:9200
+    networks:
+      - esnet
+
+  logstash:
+    image: docker.elastic.co/logstash/logstash:8.7.1
     volumes:
       - ./logstash/config/logstash.yml:/usr/share/logstash/config/logstash.yml
       - ./logstash/pipeline:/usr/share/logstash/pipeline
-    depends_on:
-      - elasticsearch
-  kibana:
-    image: docker.elastic.co/kibana/kibana:7.10.2
-    container_name: kibana
     ports:
-      - "5601:5601"
+      - 5000:5000
     depends_on:
       - elasticsearch
+    environment:
+      - xpack.security.enabled=false  
+      - xpack.license.self_generated.type=basic      
+    networks:
+      - esnet      
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:8.7.1
+    ports:
+      - 5601:5601
+    depends_on:
+      - elasticsearch
+    environment:
+      - xpack.security.enabled=false  
+      - xpack.license.self_generated.type=basic
+    networks:
+      - esnet
 volumes:
-  esdata1:
+  esdata:
     driver: local
+networks:
+  esnet:
+    driver: bridge
