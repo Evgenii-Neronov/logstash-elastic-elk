@@ -6,7 +6,7 @@ class Program
     static void Main()
     {
         Console.WriteLine(string.Join(", ", LogManager.Configuration.AllTargets));
-        Logger.Trace("This is test log");
+        Logger.Trace("2222222");
         LogManager.Flush();
         LogManager.Shutdown();
     }
